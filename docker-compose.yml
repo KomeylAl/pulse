@@ -1,0 +1,115 @@
+services:
+
+  ###################################
+  # Laravel Migration
+  ###################################
+
+  migrate:
+    build:
+      context: ./pulse-backend
+      dockerfile: Dockerfile
+
+    command: php artisan migrate --force
+
+    env_file:
+      - .env
+
+    networks:
+      - infrastructure
+
+    restart: "no"
+
+
+  ###################################
+  # Laravel App
+  ###################################
+
+  backend:
+    build:
+      context: ./pulse-backend
+      dockerfile: Dockerfile
+
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+    env_file:
+      - .env
+
+    expose:
+      - "9000"
+
+    command: php-fpm
+
+    restart: unless-stopped
+
+    networks:
+      - infrastructure
+
+
+  ###################################
+  # Queue
+  ###################################
+
+  queue:
+    build:
+      context: ./pulse-backend
+      dockerfile: Dockerfile
+
+    env_file:
+      - .env
+
+    command: php artisan queue:work --queue=notifications
+
+    restart: unless-stopped
+
+    networks:
+      - infrastructure
+
+
+  ###################################
+  # Scheduler
+  ###################################
+
+  scheduler:
+    build:
+      context: ./pulse-backend
+      dockerfile: Dockerfile
+
+    env_file:
+      - .env
+
+    command: php artisan schedule:work
+
+    restart: unless-stopped
+
+    networks:
+      - infrastructure
+
+
+  ###################################
+  # Next.js
+  ###################################
+
+  frontend:
+    build:
+      context: ./pulse-frontend
+      dockerfile: Dockerfile
+
+    env_file:
+      - .env
+
+    expose:
+      - "7000"
+
+    restart: unless-stopped
+
+    networks:
+      - infrastructure
+
+
+networks:
+
+  infrastructure:
+    external: true
+    name: infrastructure
