@@ -1,71 +1,80 @@
 services:
 
   ###################################
-  # Laravel Migration
+  # Laravel Migration (one-shot)
   ###################################
 
   migrate:
     build:
       context: ./pulse-backend
       dockerfile: Dockerfile
-
     command: php artisan migrate --force
-
     env_file:
       - .env
-
     networks:
       - infrastructure
-
     restart: "no"
 
-
   ###################################
-  # Laravel App
+  # Laravel PHP-FPM (internal :9000)
   ###################################
 
   backend:
     build:
       context: ./pulse-backend
       dockerfile: Dockerfile
-
     depends_on:
       migrate:
         condition: service_completed_successfully
-
     env_file:
       - .env
-
     expose:
       - "9000"
-
     command: php-fpm
-
     restart: unless-stopped
-
     networks:
       - infrastructure
 
+  ###################################
+  # Nginx → FastCGI to backend:9000
+  # Public HTTP on :8000 (NOT 8080 — Dozzle)
+  ###################################
+
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    networks:
+      - infrastructure
 
   ###################################
-  # Queue
+  # Queue worker
   ###################################
 
   queue:
     build:
       context: ./pulse-backend
       dockerfile: Dockerfile
-
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     env_file:
       - .env
-
-    command: php artisan queue:work --queue=notifications
-
+    command: >
+      php artisan queue:work
+      --queue=notifications
+      --sleep=1
+      --tries=3
+      --timeout=90
+      --max-time=3600
     restart: unless-stopped
-
     networks:
       - infrastructure
-
 
   ###################################
   # Scheduler
@@ -75,38 +84,33 @@ services:
     build:
       context: ./pulse-backend
       dockerfile: Dockerfile
-
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     env_file:
       - .env
-
     command: php artisan schedule:work
-
     restart: unless-stopped
-
     networks:
       - infrastructure
 
-
   ###################################
-  # Next.js
+  # Next.js dashboard
   ###################################
 
   frontend:
     build:
       context: ./pulse-frontend
       dockerfile: Dockerfile
-
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
     env_file:
       - .env
-
-    expose:
-      - "7000"
-
+    ports:
+      - "127.0.0.1:7000:7000"
     restart: unless-stopped
-
     networks:
       - infrastructure
-
 
 networks:
 
