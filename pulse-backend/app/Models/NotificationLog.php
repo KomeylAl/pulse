@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NotificationLog extends Model
 {
-    use HasFactory;
     use Concerns\StoresDatesInAppTimezone;
+    use HasFactory;
 
     protected $fillable = [
         'project_key',
@@ -26,6 +26,8 @@ class NotificationLog extends Model
         'status',
         'priority',
         'recipient',
+        'provider_message_id',
+        'delivery_status',
         'error_message',
         'attempts',
         'scheduled_at',

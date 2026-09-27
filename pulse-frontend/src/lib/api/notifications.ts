@@ -10,6 +10,7 @@ import type {
   PulseProject,
   ProjectType,
   ProjectDevicesResponse,
+  EmailContact,
   ProjectPushPayload,
   RecurringCampaignPayload,
   SendBulkPayload,
@@ -71,6 +72,33 @@ export const projectsApi = {
     apiFetch<{ message: string; project: PulseProject }>(
       `/projects/${key}/regenerate-api-key`,
       { method: "POST" },
+    ),
+  updateEmailSettings: (
+    key: string,
+    payload: {
+      resend_api_key?: string;
+      email_from_name?: string | null;
+      email_from_address: string;
+      email_reply_to?: string | null;
+      resend_webhook_secret?: string;
+    },
+  ) =>
+    apiFetch<PulseProject>(`/projects/${key}/email-settings`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  emailContacts: (key: string) =>
+    apiFetch<{
+      contacts: EmailContact[];
+      stats: { total: number; active: number };
+    }>(`/projects/${key}/email-contacts`),
+  sendTestEmail: (
+    key: string,
+    payload: { to: string; subject?: string; body?: string },
+  ) =>
+    apiFetch<{ message: string; provider_message_id: string }>(
+      `/projects/${key}/email/test`,
+      { method: "POST", body: JSON.stringify(payload) },
     ),
   updatePushSettings: (
     key: string,

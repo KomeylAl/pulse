@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Notifications\Channels\EmailChannel;
 use App\Services\Notifications\Channels\PushChannel;
 use App\Services\Notifications\Channels\SmsChannel;
 use App\Services\Notifications\Fcm\FcmService;
@@ -21,6 +22,7 @@ class NotificationServiceProvider extends ServiceProvider
             return new NotificationDispatcher([
                 $app->make(SmsChannel::class),
                 $app->make(PushChannel::class),
+                $app->make(EmailChannel::class),
             ]);
         });
     }

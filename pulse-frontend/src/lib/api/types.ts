@@ -1,4 +1,4 @@
-export type NotificationChannel = "sms" | "push";
+export type NotificationChannel = "sms" | "push" | "email";
 export type NotificationStatus =
   | "pending"
   | "processing"
@@ -38,6 +38,11 @@ export interface PulseProject {
   has_firebase: boolean;
   has_web_config: boolean;
   has_vapid_key: boolean;
+  has_email: boolean;
+  has_email_webhook?: boolean;
+  email_from_address?: string | null;
+  email_from_name?: string | null;
+  email_reply_to?: string | null;
   firebase_web_config?: FirebaseWebConfig | null;
   vapid_key?: string | null;
   fcm_web_icon: string;
@@ -55,6 +60,28 @@ export interface IntegrationGuide {
     pwa_js: string;
     android_kotlin: string;
   };
+  email?: EmailGuide;
+}
+
+export interface EmailGuide {
+  webhook_url: string;
+  steps: { title: string; body: string }[];
+  samples: {
+    register_contact_curl: string;
+    send_email_curl: string;
+  };
+}
+
+export interface EmailContact {
+  id: number;
+  project_key: string;
+  email: string;
+  name: string | null;
+  external_user_id: string | null;
+  is_active: boolean;
+  unsubscribed_at: string | null;
+  last_used_at: string | null;
+  created_at: string | null;
 }
 
 export interface NotificationLog {
@@ -73,6 +100,8 @@ export interface NotificationLog {
   status_label: string;
   priority: NotificationPriority;
   recipient: string | null;
+  provider_message_id?: string | null;
+  delivery_status?: string | null;
   error_message: string | null;
   attempts: number;
   scheduled_at: string | null;

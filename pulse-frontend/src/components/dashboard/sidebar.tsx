@@ -79,7 +79,7 @@ export function DashboardSidebar() {
             {projects.map((project) => (
               <option key={project.key} value={project.key}>
                 {project.name}
-                {project.has_firebase ? "" : " ⚠"}
+                {project.has_firebase || project.has_email ? "" : " ⚠"}
               </option>
             ))}
           </select>

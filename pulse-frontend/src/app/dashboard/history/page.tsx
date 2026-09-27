@@ -16,6 +16,23 @@ function statusVariant(status: string) {
   return "outline";
 }
 
+function deliveryLabel(status: string) {
+  const labels: Record<string, string> = {
+    sent: "قبول‌شده توسط سرویس",
+    scheduled: "زمان‌بندی‌شده",
+    delayed: "تأخیر در تحویل",
+    delivered: "به صندوق رسیده",
+    opened: "باز شده",
+    clicked: "کلیک شده",
+    bounced: "برگشت خورده",
+    complained: "اسپم",
+    failed: "خطای ارسال",
+    suppressed: "مسدود",
+  };
+
+  return labels[status] ?? status;
+}
+
 const filters = [
   { value: "", label: "همه" },
   { value: "sent", label: "ارسال‌شده" },
@@ -83,6 +100,9 @@ export default function HistoryPage() {
                   {log.status_label}
                 </Badge>
                 <Badge variant="outline">{log.channel_label}</Badge>
+                {log.delivery_status && (
+                  <Badge variant="outline">{deliveryLabel(log.delivery_status)}</Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">{log.body}</p>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

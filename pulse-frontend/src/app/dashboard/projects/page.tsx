@@ -41,7 +41,7 @@ export default function ProjectsPage() {
     <div className="mx-auto max-w-4xl space-y-6" dir="rtl">
       <PageHeader
         title="پروژه‌ها"
-        description="هر اپلیکیشن یک پروژه جدا با API Key و تنظیمات Firebase خودش است."
+        description="هر پروژه می‌تواند پوش، ایمیل یا هر دو را داشته باشد. هر کانال تنظیمات جدا دارد."
       />
 
       <section className="pulse-surface p-5">
@@ -111,9 +111,14 @@ export default function ProjectsPage() {
                   {project.type_label ?? project.type}
                 </Badge>
                 {project.has_firebase ? (
-                  <Badge variant="success">Firebase آماده</Badge>
+                  <Badge variant="success">پوش آماده</Badge>
                 ) : (
-                  <Badge variant="warning">نیاز به تنظیم Firebase</Badge>
+                  <Badge variant="warning">پوش ناقص</Badge>
+                )}
+                {project.has_email ? (
+                  <Badge variant="success">ایمیل آماده</Badge>
+                ) : (
+                  <Badge variant="warning">ایمیل ناقص</Badge>
                 )}
               </div>
               <p

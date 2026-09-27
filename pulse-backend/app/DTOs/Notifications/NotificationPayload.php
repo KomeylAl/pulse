@@ -22,6 +22,7 @@ readonly class NotificationPayload
         public ?string $phone = null,
         public string $projectKey = 'app',
         public ?string $externalUserId = null,
+        public ?string $email = null,
     ) {}
 
     /**
@@ -37,6 +38,7 @@ readonly class NotificationPayload
             'priority' => $this->priority->value,
             'project_key' => $this->projectKey,
             'external_user_id' => $this->externalUserId,
+            'email' => $this->email,
         ];
     }
 }

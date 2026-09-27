@@ -10,6 +10,7 @@ use App\Enums\NotificationTargetType;
 use App\Jobs\ProcessNotificationCampaignJob;
 use App\Jobs\SendNotificationJob;
 use App\Models\DeviceToken;
+use App\Models\EmailContact;
 use App\Models\NotificationCampaign;
 use App\Models\NotificationLog;
 use App\Models\User;
@@ -165,6 +166,119 @@ class NotificationManager
         );
 
         return $this->createLogsForPayload($payload, null, $scheduledAt);
+    }
+
+    /**
+     * Send one email per address. Inactive contacts are skipped.
+     *
+     * @param  list<string>  $addresses
+     * @param  array<string, mixed>  $data
+     */
+    public function sendEmail(
+        string $projectKey,
+        array $addresses,
+        string $title,
+        string $body,
+        array $data = [],
+        NotificationPriority $priority = NotificationPriority::Normal,
+        ?CarbonInterface $scheduledAt = null,
+        ?string $externalUserId = null,
+        ?string $replyTo = null,
+    ): Collection {
+        $project = $this->projects->findModelOrFail($projectKey);
+
+        if (! $project->hasEmailChannel()) {
+            throw new RuntimeException('Email channel is not configured for this project.');
+        }
+
+        $addresses = collect($addresses)
+            ->map(fn (string $email) => strtolower(trim($email)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($addresses->isEmpty()) {
+            throw new RuntimeException('No email recipients were provided.');
+        }
+
+        $suppressed = EmailContact::query()
+            ->where('project_key', $projectKey)
+            ->whereIn('email', $addresses->all())
+            ->where('is_active', false)
+            ->pluck('email');
+
+        $addresses = $addresses
+            ->reject(fn (string $email) => $suppressed->contains($email))
+            ->values();
+
+        if ($addresses->isEmpty()) {
+            throw new RuntimeException('All recipients are unsubscribed or suppressed.');
+        }
+
+        $extra = $data;
+
+        if (filled($replyTo)) {
+            $extra['reply_to'] = $replyTo;
+        }
+
+        $logs = collect();
+
+        foreach ($addresses as $address) {
+            $payload = new NotificationPayload(
+                title: $title,
+                body: $body,
+                channels: [NotificationChannelType::Email],
+                data: $extra,
+                priority: $priority,
+                projectKey: $projectKey,
+                externalUserId: $externalUserId,
+                email: $address,
+            );
+
+            $logs = $logs->merge($this->createLogsForPayload($payload, null, $scheduledAt));
+        }
+
+        return $logs;
+    }
+
+    /**
+     * Send to every active email saved for an external app user.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function sendEmailToExternalUser(
+        string $projectKey,
+        string $externalUserId,
+        string $title,
+        string $body,
+        array $data = [],
+        NotificationPriority $priority = NotificationPriority::Normal,
+        ?CarbonInterface $scheduledAt = null,
+        ?string $replyTo = null,
+    ): Collection {
+        $addresses = EmailContact::query()
+            ->where('project_key', $projectKey)
+            ->where('external_user_id', $externalUserId)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->pluck('email')
+            ->all();
+
+        if ($addresses === []) {
+            throw new RuntimeException('No active email contact found for this user.');
+        }
+
+        return $this->sendEmail(
+            projectKey: $projectKey,
+            addresses: $addresses,
+            title: $title,
+            body: $body,
+            data: $data,
+            priority: $priority,
+            scheduledAt: $scheduledAt,
+            externalUserId: $externalUserId,
+            replyTo: $replyTo,
+        );
     }
 
     /**
@@ -756,9 +870,11 @@ class NotificationManager
                 'data' => $payload->data,
                 'status' => $status,
                 'priority' => $payload->priority,
-                'recipient' => $channel === NotificationChannelType::Sms
-                    ? ($payload->phone ?? $payload->user?->phone)
-                    : null,
+                'recipient' => match ($channel) {
+                    NotificationChannelType::Sms => $payload->phone ?? $payload->user?->phone,
+                    NotificationChannelType::Email => $payload->email ?? $payload->user?->email,
+                    default => null,
+                },
                 'scheduled_at' => $scheduledAt,
             ]);
 

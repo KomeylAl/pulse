@@ -47,9 +47,10 @@ class SendNotificationJob implements ShouldQueue
             data: $log->data ?? [],
             priority: $log->priority,
             user: $log->user,
-            phone: $log->recipient,
+            phone: $log->channel === NotificationChannelType::Sms ? $log->recipient : null,
             projectKey: $log->project_key,
             externalUserId: $log->external_user_id,
+            email: $log->channel === NotificationChannelType::Email ? $log->recipient : null,
         );
 
         $dispatcher->dispatch($log, $payload);

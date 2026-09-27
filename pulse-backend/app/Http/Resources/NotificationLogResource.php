@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\NotificationLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin \App\Models\NotificationLog */
+/** @mixin NotificationLog */
 class NotificationLogResource extends JsonResource
 {
     /**
@@ -29,6 +30,8 @@ class NotificationLogResource extends JsonResource
             'status_label' => $this->status->label(),
             'priority' => $this->priority->value,
             'recipient' => $this->recipient,
+            'provider_message_id' => $this->provider_message_id,
+            'delivery_status' => $this->delivery_status,
             'error_message' => $this->error_message,
             'attempts' => $this->attempts,
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),

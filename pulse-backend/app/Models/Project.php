@@ -24,11 +24,18 @@ class Project extends Model
         'vapid_key',
         'fcm_web_icon',
         'fcm_default_link',
+        'resend_api_key',
+        'email_from_address',
+        'email_from_name',
+        'email_reply_to',
+        'resend_webhook_secret',
     ];
 
     protected $hidden = [
         'firebase_credentials',
         'vapid_key',
+        'resend_api_key',
+        'resend_webhook_secret',
     ];
 
     protected function casts(): array
@@ -38,6 +45,8 @@ class Project extends Model
             'firebase_credentials' => 'encrypted',
             'firebase_web_config' => 'array',
             'vapid_key' => 'encrypted',
+            'resend_api_key' => 'encrypted',
+            'resend_webhook_secret' => 'encrypted',
         ];
     }
 
@@ -61,9 +70,19 @@ class Project extends Model
         return $this->hasMany(NotificationCampaign::class, 'project_key', 'key');
     }
 
+    public function emailContacts(): HasMany
+    {
+        return $this->hasMany(EmailContact::class, 'project_key', 'key');
+    }
+
     public function hasFirebaseCredentials(): bool
     {
         return filled($this->firebase_credentials);
+    }
+
+    public function hasEmailChannel(): bool
+    {
+        return filled($this->resend_api_key) && filled($this->email_from_address);
     }
 
     public static function generateApiKey(): string

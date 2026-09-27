@@ -124,7 +124,7 @@ export function SendNotificationForm() {
       <CardHeader>
         <CardTitle>ارسال نوتیفیکیشن</CardTitle>
         <CardDescription>
-          ارسال تکی، گروهی، Broadcast یا SMS با زمان‌بندی
+          ارسال تکی، گروهی، Broadcast، ایمیل یا SMS با زمان‌بندی
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -197,14 +197,14 @@ export function SendNotificationForm() {
             <div className="space-y-2">
               <Label>کانال‌های ارسال</Label>
               <div className="flex gap-4">
-                {(["push", "sms"] as NotificationChannel[]).map((channel) => (
+                {(["push", "email", "sms"] as NotificationChannel[]).map((channel) => (
                   <label key={channel} className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       checked={channels.includes(channel)}
                       onChange={() => toggleChannel(channel)}
                     />
-                    {channel === "push" ? "Push (FCM)" : "SMS"}
+                    {channel === "push" ? "Push (FCM)" : channel === "email" ? "ایمیل" : "SMS"}
                   </label>
                 ))}
               </div>

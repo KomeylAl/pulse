@@ -98,6 +98,14 @@ class NotificationController extends Controller
             projectKey: $projectKey,
         );
 
+        if ($logs->isEmpty()) {
+            return response()->json([
+                'message' => 'No notification was queued. Configure the selected channel and make sure the recipient can receive it.',
+            ], 422);
+        }
+
+        $logs->each->refresh();
+
         return response()->json([
             'message' => 'Notification queued successfully.',
             'notifications' => NotificationLogResource::collection($logs),

@@ -22,6 +22,8 @@ readonly class PulseProject
         public ?array $webConfig = null,
         public ?string $vapidKey = null,
         public ?int $ownerId = null,
+        public ?string $emailFromAddress = null,
+        public bool $hasEmail = false,
     ) {}
 
     public static function fromModel(Project $project): self
@@ -46,6 +48,8 @@ readonly class PulseProject
             webConfig: $project->firebase_web_config,
             vapidKey: $project->vapid_key,
             ownerId: $project->user_id,
+            emailFromAddress: $project->email_from_address,
+            hasEmail: $project->hasEmailChannel(),
         );
     }
 
@@ -68,6 +72,8 @@ readonly class PulseProject
             'has_firebase' => $this->hasFirebaseCredentials(),
             'has_web_config' => filled($this->webConfig),
             'has_vapid_key' => filled($this->vapidKey),
+            'has_email' => $this->hasEmail,
+            'email_from_address' => $this->emailFromAddress,
             'fcm' => $this->fcm,
         ];
     }

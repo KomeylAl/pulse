@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\PushController;
@@ -22,6 +23,14 @@ Route::prefix('v1')->group(function (): void {
         Route::post('send', [PushController::class, 'send']);
     });
 
+    Route::middleware(AuthenticatePulseProject::class)->prefix('email')->group(function (): void {
+        Route::post('contacts', [EmailController::class, 'registerContact']);
+        Route::delete('contacts', [EmailController::class, 'deactivateContact']);
+        Route::post('send', [EmailController::class, 'send']);
+    });
+
+    Route::post('email/webhook/{project:key}', [EmailController::class, 'webhook']);
+
     Route::middleware(AuthenticatePulseProject::class)->get('projects/me', [PushController::class, 'me']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
@@ -35,6 +44,9 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('projects/{project:key}', [ProjectController::class, 'destroy']);
         Route::post('projects/{project:key}/regenerate-api-key', [ProjectController::class, 'regenerateApiKey']);
         Route::put('projects/{project:key}/push-settings', [ProjectController::class, 'updatePushSettings']);
+        Route::put('projects/{project:key}/email-settings', [ProjectController::class, 'updateEmailSettings']);
+        Route::get('projects/{project:key}/email-contacts', [ProjectController::class, 'emailContacts']);
+        Route::post('projects/{project:key}/email/test', [ProjectController::class, 'sendTestEmail']);
         Route::get('projects/{project:key}/integration-guide', [ProjectController::class, 'integrationGuide']);
         Route::get('projects/{project:key}/devices', [ProjectController::class, 'devices']);
 

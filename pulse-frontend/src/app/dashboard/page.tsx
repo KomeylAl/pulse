@@ -213,10 +213,15 @@ export default function DashboardPage() {
                 href: projectKey
                   ? `/dashboard/projects/${projectKey}/settings`
                   : "/dashboard/projects",
-                title: "تنظیمات Firebase",
-                desc: project?.has_firebase
-                  ? "پیکربندی Push آماده است"
-                  : "برای ارسال Push تنظیم کنید",
+                title: "تنظیمات کانال‌ها",
+                desc:
+                  project?.has_firebase && project?.has_email
+                    ? "پوش و ایمیل آماده‌اند"
+                    : project?.has_firebase
+                      ? "ایمیل هنوز تنظیم نشده"
+                      : project?.has_email
+                        ? "پوش هنوز تنظیم نشده"
+                        : "پوش یا ایمیل را پیکربندی کنید",
               },
             ].map((item) => (
               <Link

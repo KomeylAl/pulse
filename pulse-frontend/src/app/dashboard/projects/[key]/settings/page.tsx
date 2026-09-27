@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ChannelAccordion } from "@/components/dashboard/channel-accordion";
+import { EmailChannelPanel } from "@/components/dashboard/email-channel-panel";
 import { projectsApi } from "@/lib/api/notifications";
 import type { IntegrationGuide, ProjectDevice, ProjectSubscriber, PulseProject } from "@/lib/api/types";
 
@@ -146,9 +148,14 @@ export default function ProjectSettingsPage() {
         </div>
         <div className="flex gap-2">
           {project.has_firebase ? (
-            <Badge variant="success">Firebase آماده</Badge>
+            <Badge variant="success">پوش آماده</Badge>
           ) : (
-            <Badge variant="warning">Firebase ناقص</Badge>
+            <Badge variant="warning">پوش ناقص</Badge>
+          )}
+          {project.has_email ? (
+            <Badge variant="success">ایمیل آماده</Badge>
+          ) : (
+            <Badge variant="warning">ایمیل ناقص</Badge>
           )}
           <Badge variant="outline">{project.type_label ?? project.type}</Badge>
         </div>
@@ -160,6 +167,30 @@ export default function ProjectSettingsPage() {
         </p>
       )}
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">API Key پروژه</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            این کلید برای همهٔ کانال‌های پروژه است و با هدر{" "}
+            <code dir="ltr">X-Pulse-Api-Key</code> فرستاده می‌شود.
+          </p>
+          <Input value={project.api_key ?? ""} readOnly dir="ltr" />
+          <Button variant="outline" size="sm" onClick={() => void regenerateKey()}>
+            تولید مجدد API Key
+          </Button>
+        </CardContent>
+      </Card>
+
+      <ChannelAccordion
+        title="پوش نوتیفیکیشن"
+        description="Firebase برای وب و اندروید"
+        ready={project.has_firebase}
+        readyLabel="آماده"
+        pendingLabel="نیاز به تنظیم"
+        defaultOpen={!project.has_firebase}
+      >
       <Card>
         <CardHeader>
           <CardTitle className="text-base">کاربران و دستگاه‌های ثبت‌شده</CardTitle>
@@ -247,22 +278,6 @@ export default function ProjectSettingsPage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">API Key پروژه</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            این کلید را در اپلیکیشن خود با هدر{" "}
-            <code dir="ltr">X-Pulse-Api-Key</code> بفرستید.
-          </p>
-          <Input value={project.api_key ?? ""} readOnly dir="ltr" />
-          <Button variant="outline" size="sm" onClick={() => void regenerateKey()}>
-            تولید مجدد API Key
-          </Button>
         </CardContent>
       </Card>
 
@@ -366,6 +381,26 @@ export default function ProjectSettingsPage() {
           </CardContent>
         </Card>
       )}
+      </ChannelAccordion>
+
+      <ChannelAccordion
+        title="ایمیل"
+        description="ارسال با Resend؛ هر پروژه کلید و دامنهٔ خودش را دارد"
+        ready={project.has_email}
+        readyLabel="آماده"
+        pendingLabel="نیاز به تنظیم"
+        defaultOpen={!project.has_email}
+      >
+        <EmailChannelPanel
+          projectKey={key}
+          project={project}
+          guide={guide?.email ?? null}
+          onProjectUpdated={(updated) => {
+            setProject(updated);
+            void projectsApi.integrationGuide(key).then(setGuide).catch(() => undefined);
+          }}
+        />
+      </ChannelAccordion>
     </div>
   );
 }
